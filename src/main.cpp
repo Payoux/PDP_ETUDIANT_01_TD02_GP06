@@ -19,38 +19,42 @@
 #define DHTTYPE DHT11
 
 // Initialize the DHT sensor
-DHT dht(DHTPIN, DHTTYPE);
+DHT_Unified dht(DHTPIN, DHTTYPE);
+
 
 void setup() {
-  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG,0);
-  Serial.begin(9600);
-  pinMode(LED, OUTPUT);
+   Serial.begin(9600);
+  // Initialize device.
   dht.begin();
+  Serial.println(F("DHTxx Unified Sensor Example"));
+
+  // Get temperature event and print its value.
+  sensors_event_t event;
+  dht.temperature().getEvent(&event);
+  if (isnan(event.temperature)) {
+    Serial.println(F("Error reading temperature!"));
+  }
+  else {
+    Serial.print(F("Temperature: "));
+    Serial.print(event.temperature);
+    Serial.println(F("°C"));
+  }
+
+  // Get humidity event and print its value.
+  dht.humidity().getEvent(&event);
+  if (isnan(event.relative_humidity)) {
+    Serial.println(F("Error reading humidity!"));
+  }
+  else {
+    Serial.print(F("Humidity: "));
+    Serial.print(event.relative_humidity);
+    Serial.println(F("%"));
+  }
+
+  // Mettre l'ESP32 en mode Deep Sleep pendant 5 secondes
+  esp_sleep_enable_timer_wakeup(5000000); // 5 secondes en microsecondes
+  esp_deep_sleep_start();
 }
 
 void loop() {
-  // Attendre 5 secondes entre les mesures
-
-
-  float humidity = dht.readHumidity();
-  float temperature = dht.readTemperature();
-
-
-  if (isnan(humidity) || isnan(temperature)) {
-    Serial.println("Failed to read from DHT sensor!");
-    return;
-  }
-
-  // Afficher l'humidité et la température
-  Serial.print("Humidity: ");
-  Serial.print(humidity);
-  Serial.println(" %");
-  Serial.print("Temperature: ");
-  Serial.print(temperature);
-  Serial.println(" *C");
-
-  esp_sleep_enable_timer_wakeup(5000000);
-  Serial.flush();
-  delay(20);
-  esp_deep_sleep_start();
 }
